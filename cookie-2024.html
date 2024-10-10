@@ -12,7 +12,7 @@
       margin: 0;
       position: relative;
 
-      font-size: 16px;
+      font-size: 24px;
       font-family: sans-serif;
 
       display: flex;
@@ -44,7 +44,7 @@
       border: none;
       border-radius: 5px;
       padding: 0.5em 1em;
-      font-size: 1.5em;
+      font-size: 1em;
       color: white;
     }
 
@@ -83,26 +83,29 @@
     }
 
     #record > div {
-      width: calc(100vw / 24 - 5px);
+      --mml-size: calc(100vw / 24 - 5px);
+      width: var(--mml-size);
       margin-right: 2px;
     }
     #record > div > div:first-child {
+      font-size: max(0.8em, calc(var(--mml-size) * 0.6));
       text-align: center;
     }
     #record > div > div:last-child[mml-cookie=A] {
-      height: calc(100vw / 24 - 5px);
+      height: var(--mml-size);
     }
     #record > div > div:last-child[mml-cookie=B] {
-      height: calc(100vw / 24 - 5px);
+      height: var(--mml-size);
     }
     #record > div > div:last-child[mml-cookie=C] {
-      height: calc(100vw / 24 - 5px);
+      height: var(--mml-size);
     }
 
     footer {
       margin-top: auto;
       padding: 1em;
       text-align: center;
+      font-size: small;
     }
   </style>
 </head>
