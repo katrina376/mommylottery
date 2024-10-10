@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>抽餅乾 2024 Special</title>
+  <style>
+    body {
+      width: 100vw;
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+      position: relative;
+
+      font-size: 16px;
+      font-family: sans-serif;
+
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    body > * {
+      margin-top: 1em;
+    }
+
+    #display {
+      display: flex;
+      justify-content: center;
+    }
+
+    #display > div {
+      --mml-size: min(60vh, 40vw);
+      width: var(--mml-size);
+      height: var(--mml-size);
+      margin-right: 2px;
+
+      display: inline;
+      font-size: calc(var(--mml-size) * 0.8);
+      line-height: var(--mml-size);
+    }
+
+    button {
+      border: none;
+      border-radius: 5px;
+      padding: 0.5em 1em;
+      font-size: 1.5em;
+      color: white;
+    }
+
+    button#start {
+      background: green;
+    }
+
+    button#draw {
+      background: red;
+    }
+
+    form#player {
+      margin-top: 1em;
+    }
+
+    form#player[mml-status="idle"] button#draw {display: none;}
+    form#player[mml-status="running"] button#start {display: none;}
+
+    div[mml-cookie=A] {
+      border-radius: 50%;
+      background-color: steelblue;
+      border: 2px solid black;
+    }
+    div[mml-cookie=B] {
+      background-color: saddlebrown;
+      border: 2px solid black;
+    }
+    div[mml-cookie=C] {
+      background-color: wheat;
+      border: 2px solid black;
+    }
+
+    #record {
+      display: flex;
+      justify-content: center;
+    }
+
+    #record > div {
+      width: calc(100vw / 24 - 5px);
+      margin-right: 2px;
+    }
+    #record > div > div:first-child {
+      text-align: center;
+    }
+    #record > div > div:last-child[mml-cookie=A] {
+      height: calc(100vw / 24 - 5px);
+    }
+    #record > div > div:last-child[mml-cookie=B] {
+      height: calc(100vw / 24 - 5px);
+    }
+    #record > div > div:last-child[mml-cookie=C] {
+      height: calc(100vw / 24 - 5px);
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 1em;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+<div id="display">
+  <div id="student"></div>
+  <div id="cookie"></div>
+</div>
+<form id="player" mml-status="running">
+  <input type="hidden" name="student" />
+  <input type="hidden" name="cookie" />
+  <button type="button" id="start">繼續</button>
+  <button type="submit" id="draw">抽籤</button>
+</form>
+<div id="record"></div>
+<footer>
+  Developed by <a href="https://katrina.tw" target="_blank">Hao-Yung Chan</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+<script type="text/javascript">
+  const cookieTypes = ["A", "B", "C"];
+
+  let students = Array(25).fill().map((_, idx) => idx + 1).filter(i => i !== 10 && i !== 22);
+  let cookies = Array(24).fill().map((_, idx) => ({cat: cookieTypes[idx % 3], idx: idx}));
+
+  let playerForm = document.querySelector("#player");
+  let record = document.querySelector('#record');
+
+  let studentClock;
+  let studentView = document.querySelector("#student");
+  let studentInput = document.querySelector("input[name=student]");
+
+  let cookieClock;
+  let cookieView = document.querySelector("#cookie");
+  let cookieInput = document.querySelector("input[name=cookie]");
+
+  function runStudent() {
+    let choices = _.without(students, Number(studentInput.value));
+    if (choices.length > 0) {
+      let choice = _.sample(_.without(students, Number(studentInput.value)));
+      studentView.innerHTML = choice;
+      studentInput.value = choice;
+    }
+  }
+
+  function runCookie() {
+    let choices = _.filter(cookies, e => e.idx !== Number(cookieInput.value));
+    if (choices.length > 0) {
+      let choice = _.sample(_.filter(cookies, e => e.idx !== Number(cookieInput.value)));
+      cookieView.setAttribute("mml-cookie", choice.cat);
+      cookieInput.value = choice.idx;
+    }
+  }
+
+  function createRecord(student, cookie) {
+    let ele = document.createElement('div');
+
+    let studentEle = document.createElement('div');
+    ele.appendChild(studentEle);
+    studentEle.innerHTML = student;
+
+    let cookieEle = document.createElement('div');
+    ele.appendChild(cookieEle);
+    cookieEle.setAttribute("mml-cookie", cookie);
+
+    return ele;
+  }
+
+  function startPlay() {
+    if (Math.min(students.length, cookies.length) === 0) {
+      window.alert('沒ㄌ');
+    } else {
+      playerForm.setAttribute("mml-status", "running");
+      studentClock = setInterval(runStudent, 100);
+      cookieClock = setInterval(runCookie, 100);
+    }
+  }
+
+
+  playerForm.addEventListener("submit", function(ev) {
+    ev.preventDefault();
+
+    clearInterval(studentClock);
+    clearInterval(cookieClock);
+
+    playerForm.setAttribute("mml-status", "idle");
+
+    let data = new FormData(ev.target);
+    let student = Number(data.get("student"));
+    let cookieId = Number(data.get("cookie"))
+
+    studentView.innerHTML = data.get("student");
+
+    let cookie = cookies[_.findIndex(cookies, {idx: cookieId})];
+    cookieView.setAttribute("mml-cookie", cookie.cat);
+    record.appendChild(createRecord(student, cookie.cat));
+
+    _.remove(students, e => e === student);
+    _.remove(cookies, e => e.idx === cookieId);
+  });
+
+  document.querySelector("#start").addEventListener("click", startPlay);
+  window.addEventListener("load", startPlay);
+
+</script>
+</body>
+
+</html>
